@@ -1,18 +1,21 @@
-# Verhindert den Upload der Zugangsdaten
+# --- Sensible Daten ---
 config.php
+confg.php
 emails.txt
 
-# Verhindert den Upload der Gästeliste (Datenschutz!)
-emails.txt
+# --- Komplette Ordner blockieren ---
+# Das schließt 'assets', 'logo' und alle darin enthaltenen Bilder aus
+assets/
+logo/
 
-# Verhindert System-Müll (optional)
+# --- System-Müll (macOS & Windows) ---
 .DS_Store
 Thumbs.db
-
-
 ._*
-.DS_Store
 **/.DS_Store
 **/._*
+
+# --- Sonstiges ---
+*.log
 
 
