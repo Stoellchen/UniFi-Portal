@@ -1,0 +1,10 @@
+# Verhindert den Upload der Zugangsdaten
+config.php
+emails.txt
+
+# Verhindert den Upload der Gästeliste (Datenschutz!)
+emails.txt
+
+# Verhindert System-Müll (optional)
+.DS_Store
+Thumbs.db

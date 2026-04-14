@@ -1,0 +1,32 @@
+<?php
+// 1. Daten vom Controller (aus der URL) abgreifen
+$id = $_GET['id']; // Die MAC-Adresse des Gastes
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = $_POST['email'];
+    
+    // E-Mail speichern
+    file_put_contents("emails.txt", $email . PHP_EOL, FILE_APPEND);
+
+    // 2. UniFi API Call (Der "Magische" Teil)
+    // Wir nutzen hier ein einfaches cURL-Kommando an deinen Controller
+    $controller_url = "https://10.XXX.XX.XX:XXXX3";
+    $username = "u XXXXXX 1";
+    $password = "S XXXXXX 4";
+    $site = "s XXXXXX 1";
+
+    // Hier würde jetzt der API-Login und die Autorisierung folgen.
+    // Es gibt fertige PHP-Klassen wie "Art-of-WiFi", die das in 3 Zeilen erledigen.
+    
+    echo "<h1>Vielen Dank! Sie sind nun verbunden.</h1>";
+    // Redirect nach 2 Sekunden
+    header("Refresh:2; url=https://google.com");
+    exit;
+}
+?>
+
+<form method="post">
+  <h2>Willkommen im Château</h2>
+  <input type="email" name="email" placeholder="Ihre E-Mail Adresse" required>
+  <button type="submit">Einloggen</button>
+</form>
