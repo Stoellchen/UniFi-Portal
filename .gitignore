@@ -8,3 +8,11 @@ emails.txt
 # Verhindert System-Müll (optional)
 .DS_Store
 Thumbs.db
+
+
+._*
+.DS_Store
+**/.DS_Store
+**/._*
+
+
