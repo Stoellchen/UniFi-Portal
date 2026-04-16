@@ -85,13 +85,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
         $unifi_connection->authorize_guest($id, $duration, $up, $down, null, $ap);
         
         // Erfolg-Overlay
-        echo "<div style='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);color:white;display:flex;justify-content:center;align-items:center;z-index:9999;text-align:center;font-family:Georgia,serif;backdrop-filter:blur(5px);'>
-                <div>
-                    <h1 style='font-size:2.5em;'>$welcome_msg</h1>
-                    <p style='font-size:1.2em;'>Votre accès Wi-Fi (<strong>$status_label</strong>) est activé.</p>
-                    <p style='opacity:0.7;'>Vitesse: " . ($down/1000) . " Mbps | Redirection en cours...</p>
-                </div>
-              </div>";
+        // Erfolg-Overlay mit Eichhörnchen-Abschied
+        echo "
+        <style>
+            @keyframes rocket {
+                0% { transform: translateY(0) rotate(0); }
+                25% { transform: translateY(-10px) rotate(5deg); }
+                75% { transform: translateY(5px) rotate(-5deg); }
+                100% { transform: translateY(0) rotate(0); }
+            }
+            a:hover {
+                background: #f1c40f !important;
+                color: #000 !important;
+                box-shadow: 0 0 30px rgba(241,196,15,0.6) !important;
+                transform: scale(1.05);
+            }
+            /* --- DAS HINTERGRUNDBILD (SQUIRREL WALL) --- */
+            .bg-squirrel-wall {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 90%;
+                height: 90%;
+                /* Pfad anpassen, falls nötig */
+                background-image: url('/assets/logo/squirrel_wall.png'); 
+                background-repeat: no-repeat;
+                background-position: center center;
+                background-size: contain; /* Zeigt das ganze Bild ohne Beschnitt */
+                z-index: -1;
+                
+                /* Bild abdunkeln und leicht weichzeichnen für bessere Lesbarkeit des Textes */
+                filter: brightness(0.5); //  blur(1px)
+                -webkit-filter: brightness(0.5); //  blur(1px)
+                transform: scale(1.1); /* Gleicht den weißen Rand beim Blur etwas aus */
+            }
+        </style>
+        <div id='success-redirect' style='position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at center, #2c3e50 0%, #000000 100%);color:white;display:flex;justify-content:center;align-items:center;z-index:9999;text-align:center;font-family:\"Georgia\",serif;backdrop-filter:blur(15px);'>
+        
+        <div style='max-width: 600px; width: 90%; padding: 40px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);'>
+        <div class='bg-squirrel-wall'></div>
+            
+            <div style='font-size: 60px; margin-bottom: 20px; display: inline-block; animation: rocket 2s infinite ease-in-out;'>🐿️</div>
+            
+            <h1 style='font-size:2.5em; margin-bottom: 10px; font-weight: normal; color: #f1c40f;'>$welcome_msg</h1>
+            <p style='font-size:1.2em; margin-bottom: 5px; opacity: 0.9;'>Votre connexion est établie avec succès.</p>
+            <p style='font-size:1em; margin-bottom: 30px; color: #27ae60;'>Status: $status_label | Vitesse: " . ($down/1000) . " Mbps</p>
+            
+            <div style='position: relative; width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 15px; overflow: hidden;'>
+                <div id='progress-bar' style='width: 0%; height: 100%; background: linear-gradient(90deg, #f1c40f, #27ae60); box-shadow: 0 0 15px #27ae60; transition: width 10s linear;'></div>
+            </div>
+            
+            <p style='font-size: 0.85em; opacity: 0.5; margin-bottom: 30px;'>Redirection automatique dans <span id='countdown-text'>10</span> secondes...</p>
+
+            <a href='https://www.google.fr' style='display: inline-block; padding: 15px 35px; background: transparent; border: 2px solid #f1c40f; color: #f1c40f; text-decoration: none; border-radius: 50px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(241,196,15,0.2);'>
+                Aller sur Internet maintenant
+            </a>
+        </div>
+
+
+        <script>
+            // Start Fortschrittsbalken
+            setTimeout(() => {
+                const bar = document.getElementById('progress-bar');
+                if(bar) bar.style.width = '100%';
+            }, 100);
+
+            // Countdown Text
+            let timeLeft = 10;
+            const timer = setInterval(() => {
+                timeLeft--;
+                const txt = document.getElementById('countdown-text');
+                if(txt) txt.innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    window.location.href = 'https://www.google.fr';
+                }
+            }, 1000);
+        </script>
+      </div>";
+
+
 
     } catch (Exception $e) {
         echo "<div style='position:fixed;top:0;left:0;width:100%;height:100%;background:#cc0000;color:white;display:flex;justify-content:center;align-items:center;z-index:9999;'>
@@ -99,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
               </div>";
     }
 
-    header("Refresh:4; url=https://www.google.com");
+    // header("Refresh:10; url=https://www.google.com");
     exit;
 }
 ?>
@@ -124,18 +197,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
             overflow: hidden; /* Verhindert Scrollen bei Animationen */
         }
 
-        /* Hintergrundbild-Konfiguration */
-        .bg-fullscreen {
+
+
+        /* Wir erstellen eine Ebene hinter dem Inhalt */
+        .bg-kenburns {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* WICHTIG: Der Slash vor dem PHP Tag */
+            z-index: -1; /* Hinter die weiße Box legen */
             background: url('/<?php echo $bg_image; ?>') no-repeat center center fixed;
             background-size: cover;
-            z-index: -2;
+            background-position: center;
+            
+            /* Die Animation: Dauer 30s, unendlich, sanfter Übergang */
+            animation: kenburns-effect 30s infinite alternate ease-in-out;
         }
+
+        @keyframes kenburns-effect {
+            0% {
+                transform: scale(1.0);
+                background-position: center;
+            }
+            100% {
+                transform: scale(1.15); /* 15% Zoom */
+                background-position: center;
+            }
+        }
+
 
         /* Platzhalter für dein späteres Animations-Canvas */
         #animation-canvas {
@@ -260,14 +350,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
             top: 2%;
             left: 2%;
             /* 10vw bedeutet: 10% der aktuellen Breite des Browserfensters */
-            width: 25vw; 
+            width: 10vw; 
             /* Die Höhe sollte identisch sein, damit das Canvas quadratisch bleibt */
-            height: 25vw; 
+            height: 10vw; 
             z-index: 100;
             cursor: pointer;
 
             /* Hier passiert die Rundung */
-            border-radius: 40px; 
+            // border-radius: 40px; 
+            border-radius: clamp(10px, 5%, 30px);
             overflow: hidden; 
             
             /* Schatten für den edlen Look */
@@ -352,10 +443,235 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
 
         .close-modal:hover { color: black; }
 
+        /* In deiner CSS-Datei */
+        .captive-portal-container {
+            opacity: 0; /* Zuerst unsichtbar */
+            transform: translateY(60px); /* Startet 20px weiter unten */
+            animation: slideInSoft 4s ease-out forwards; /* Startet die Animation */
+
+            background: rgba(255, 255, 255, 0.7); /* Transparenteres Weiß */
+            backdrop-filter: blur(10px); /* Der magische Unschärfe-Effekt */
+            -webkit-backdrop-filter: blur(10px); /* Unterstützung für Safari/iOS */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtiler Lichtrand */
+            border-radius: 15px; /* Schön abgerundete Ecken */        
+        }
+
+        @keyframes slideInSoft {
+            to {
+                opacity: 1; /* Am Ende voll sichtbar */
+                transform: translateY(0); /* An der ursprünglichen Position */
+            }
+        }
+
+        /* In deiner CSS-Datei */
+        .captive-portal-container input[type="text"],
+        .captive-portal-container input[type="email"],
+        .captive-portal-container input[type="password"] {
+            transition: all 0.3s ease; /* Alle Änderungen werden animiert */
+        }
+
+        .captive-portal-container input[type="text"]:focus,
+        .captive-portal-container input[type="email"]:focus,
+        .captive-portal-container input[type="password"]:focus {
+            transform: scale(1.02); /* Minimal vergrößern (2%) */
+            border-color: #2a3b4c; /* Deine Button-Farbe als Rand */
+            box-shadow: 0 0 10px rgba(42, 59, 76, 0.2); /* Sanfter Glüheffekt */
+        }
+
+        /* In deiner CSS-Datei */
+        .captive-portal-container button[type="submit"]:hover {
+            animation: buttonPulse 1.5s infinite; /* Unendlicher Puls beim Hover */
+        }
+
+        @keyframes buttonPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(42, 59, 76, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(42, 59, 76, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(42, 59, 76, 0);
+            }
+        }
+
+        /* Basis-Stil für alle Zeilen */
+        .typewriter {
+        overflow: hidden;
+        white-space: nowrap;
+        border-right: .12em solid #2a3b4c;
+        margin: 0 auto;
+        width: 0;
+        }
+
+        /* 1. Hauptzeile */
+        .title-line {
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        animation: typing 1.5s steps(30, end) forwards, blink-caret .75s step-end 2, hide-cursor 0s forwards 1.6s;
+        }
+
+        /* 2. Untertitel Zeile 1 */
+        .subtitle-line-1 {
+        font-size: 0.75rem;
+        color: #4a5b6c;
+        animation: typing 1.5s steps(30, end) forwards, blink-caret .75s step-end 2, hide-cursor 0s forwards 1.6s;
+        animation-delay: 1.8s; /* Startet nach der ersten Zeile */
+        }
+
+        /* 3. Untertitel Zeile 2 */
+        .subtitle-line-2 {
+            font-size: 0.75rem;
+            color: #4a5b6c;
+            margin-bottom: 20px;
+            width: 0; /* GANZ WICHTIG: Erzwingt, dass die Zeile unsichtbar startet */
+            overflow: hidden; /* Versteckt den Text, solange die Breite 0 ist */
+            
+            /* Wir packen alles in eine Zeile und nutzen 'both', damit der Start- und Endzustand fixiert sind */
+            animation: 
+                typing 1.5s steps(30, end) forwards, 
+                blink-caret .75s step-end 2, 
+                hide-cursor 0s forwards 5.1s;
+            animation-delay: 3.5s; 
+        }
+
+        /* Animationen */
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #2a3b4c; } }
+        @keyframes hide-cursor { to { border-right: none; } }
+
+
+        /* Positionierung über der Box */
+/* Der Haupt-Container für das Eichhörnchen */
+/* Der Haupt-Container für das Eichhörnchen über der Box */
+.squirrel-interactive-wrapper {
+    position: absolute;
+    top: -153px; /* Justierung, damit die Pfoten genau auf der Kante liegen */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px; /* Die Breite deines Bildes */
+    height: auto;
+    z-index: 110; /* Höher als der captive-portal-container */
+    pointer-events: none; /* Klicks gehen durch das Eichhörnchen durch zum Formular */
+}
+
+/* 2. Das Eichhörnchen-Bild (ohne Pupillen) */
+.squirrel-body {
+    width: 100%;
+    height: auto;
+    display: block;
+    position: relative;
+    z-index: 10; /* Liegt über den Pupillen, falls das Bild "Löcher" hat */
+}
+
+/* 3. Container für die Augen-Logik */
+.squirrel-eyes-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 90; /* Grundebene für die Augenhöhlen */
+}
+
+/* 4. Die weißen Augenhöhlen */
+.eye-socket {
+    position: absolute;
+    width: 18px;      /* Schmaler für die Mandelform */
+    height: 22px;     /* Länger für den Fokus-Effekt */
+    background: #ffffff !important;
+    border-radius: 50% 50% 45% 45%; /* Oben runder, unten leicht spitzer */
+    overflow: hidden; 
+    z-index: 115;
+}
+
+/* Positionen der Augen (basierend auf deinem Bild) */
+.eye-socket.left { top: 87px; left: 73px; transform: rotate(-20deg);}
+.eye-socket.right { top: 86px; right: 76px; transform: rotate(20deg);}
+
+
+/* 5. Die bewegliche Pupille */
+.pupil {
+    position: absolute;
+    width: 26px; 
+    height: 26px;
+    background: #1a252f !important; /* Ein fast schwarzes Dunkelblau */
+    border-radius: 50%;
+    /* WICHTIG: Die Grundposition muss absolut mittig sein */
+    top: 50%;
+    left: 50%;
+    /* transform wird vom JS gesteuert, aber wir brauchen einen Startwert */
+    transform: translate(-50%, -50%); 
+    z-index: 120; /* Über der Augenhöhle */
+    display: block !important;
+}
+
+/* 6. Der weiße Reflex-Punkt (feststehend) */
+/* Wir setzen ihn in den Wrapper, damit er VOR dem squirrel-body liegt */
+.reflection {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: #ffffff !important;
+    border-radius: 50%;
+    z-index: 130; /* Über allem, auch über dem squirrel-body */
+    pointer-events: none;
+    box-shadow: 0 0 2px rgba(255,255,255,0.8);
+}
+
+/* Positionierung der Reflexe innerhalb der Augen-Bereiche */
+/* Diese müssen manuell über die Augenhöhlen geschoben werden */
+.squirrel-interactive-wrapper .reflection-left {
+    top: 91px;
+    left: 78px;
+}
+
+.squirrel-interactive-wrapper .reflection-right {
+    top: 91px;
+    right: 82px;
+}
+
+
     </style>
 
-        <script>
-        document.addEventListener("DOMContentLoaded", function() {
+<script>
+    // 1. Daten beim Laden der Seite wiederherstellen
+    function loadSavedData() {
+        // Wir suchen die Felder
+        const emailField = document.querySelector('input[name="email"]');
+        const nameField = document.querySelector('input[name="vorname"]');
+        const codeField = document.querySelector('input[name="access_code"]');
+
+        // Werte aus dem Speicher holen
+        const savedEmail = localStorage.getItem('residence_email');
+        const savedName = localStorage.getItem('residence_vorname');
+        const savedCode = localStorage.getItem('residence_code');
+        const rulesAccepted = localStorage.getItem('residence_rules_accepted');
+
+        // Felder befüllen, falls Daten da sind
+        if (savedEmail && emailField) emailField.value = savedEmail;
+        if (savedName && nameField) nameField.value = savedName;
+        if (savedCode && codeField) codeField.value = savedCode;
+
+        // Rückgabe: Haben wir die Regeln schon mal akzeptiert?
+        return (rulesAccepted === 'true');
+    }
+
+    // 2. Daten speichern, wenn der Login-Button gedrückt wird
+    function saveCurrentData() {
+        const email = document.querySelector('input[name="email"]').value;
+        const name = document.querySelector('input[name="vorname"]').value;
+        const code = document.querySelector('input[name="access_code"]').value;
+
+        localStorage.setItem('residence_email', email);
+        localStorage.setItem('residence_vorname', name);
+        localStorage.setItem('residence_code', code);
+        localStorage.setItem('residence_rules_accepted', 'true');
+    }
+
+        document.addEventListener("DOMContentLoaded", function() 
+        {
             // Funktion zum Öffnen
             function setupModal(linkId, modalId) {
                 const link = document.getElementById(linkId);
@@ -387,6 +703,117 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
                 }
             };
         });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const alreadyAccepted = loadSavedData();
+        
+        const checkboxes = [
+            document.getElementById('accept_agb'),
+            document.getElementById('accept_rules_indoor'),
+            document.getElementById('accept_rules_outdoor')
+        ];
+        const waitTimes = [15, 5, 5]; 
+        const submitBtn = document.querySelector('button[type="submit"]');
+        
+        let currentIndex = 0;
+
+        // --- LOGIK-ENTSCHEIDUNG ---
+        if (alreadyAccepted) {
+            // Gast bekannt: Alles sofort freischalten
+            checkboxes.forEach(box => {
+                if(box) {
+                    box.disabled = false;
+                    box.checked = true;
+                }
+            });
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+                submitBtn.style.cursor = "pointer";
+                submitBtn.innerText = "Bon retour ! C'est parti !";
+            }
+        } else {
+            // Neuer Gast: Initial sperren und Timer-Kette starten
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+                submitBtn.style.cursor = "not-allowed";
+            }
+
+            checkboxes.forEach(box => {
+                if(box) {
+                    box.disabled = true;
+                    box.checked = false;
+                }
+            });
+
+            // NUR HIER die Kette starten
+            activateNextCheckbox();
+        }
+
+        // Die Funktion selbst bleibt wie sie ist
+        function activateNextCheckbox() {
+            if (currentIndex < checkboxes.length) {
+                const currentBox = checkboxes[currentIndex];
+                if(!currentBox) return; // Sicherheitsscheck
+                
+                const label = currentBox.parentElement;
+                const timerSpan = document.createElement('span');
+                timerSpan.className = 'timer-hint';
+                timerSpan.style.fontSize = '0.75em';
+                timerSpan.style.color = '#ff0000';
+                timerSpan.style.marginLeft = '10px';
+                label.appendChild(timerSpan);
+
+                let timeLeft = waitTimes[currentIndex];
+                
+                const countdown = setInterval(() => {
+                    timerSpan.innerText = ` (lecture... ${timeLeft}s)`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        currentBox.disabled = false;
+                        timerSpan.remove();
+                        
+                        label.style.transition = "color 0.3s";
+                        label.style.color = "#27ae60";
+                        setTimeout(() => { label.style.color = ""; }, 500);
+
+                        currentIndex++;
+                        activateNextCheckbox();
+                    }
+                    timeLeft--;
+                }, 1000);
+            }
+        }
+
+        // Listener für manuelle Klicks (bleibt für beide Fälle aktiv)
+        checkboxes.forEach(box => {
+            if(box) {
+                box.addEventListener('change', () => {
+                    const allChecked = checkboxes.every(b => b && b.checked);
+                    if (allChecked) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = "1";
+                        submitBtn.style.cursor = "pointer";
+                        submitBtn.innerText = "C'est parti !";
+                    } else {
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = "0.5";
+                        submitBtn.style.cursor = "not-allowed";
+                        submitBtn.innerText = "Se connecter";
+                    }
+                });
+            }
+        });
+
+        // Speicher-Event beim Absenden
+        const form = document.querySelector('form');
+        if(form) {
+            form.addEventListener('submit', saveCurrentData);
+        }
+    });
+
         </script>
 
         <script>
@@ -475,7 +902,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
                 requestAnimationFrame(animate);
             }
         });
-        </script>
+
+</script>
 
 
 <script>
@@ -586,22 +1014,81 @@ document.addEventListener("DOMContentLoaded", function() {
 
     animate();
 });
+
+
+</script>
+
+<script>
+// Alle Pupillen auswählen
+document.addEventListener('DOMContentLoaded', () => {
+    // Nur die Pupillen auswählen
+    const pupils = document.querySelectorAll('.squirrel-interactive-wrapper .pupil');
+
+    document.addEventListener('mousemove', (e) => {
+        // Mausposition holen
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        pupils.forEach(pupil => {
+            // Position des Auges (Mitte) berechnen
+            const rect = pupil.getBoundingClientRect();
+            const eyeX = rect.left + rect.width / 2;
+            const eyeY = rect.top + rect.height / 2;
+
+            // Winkel zwischen Auge und Maus berechnen
+            const angle = Math.atan2(mouseY - eyeY, mouseX - eyeX);
+            
+            // Wie weit soll die Pupille maximal wandern (in Pixeln)
+            const distance = 6; 
+
+            // Neue Position der Pupille berechnen
+            const moveX = Math.cos(angle) * distance;
+            const moveY = Math.sin(angle) * distance;
+
+            // Pupille verschieben (relativ zu ihrer Mitte)
+            pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+        });
+    });
+});
 </script>
 
 </head>
 <body>
-    <div class="bg-fullscreen"></div>
+    <div class="bg-kenburns"></div>
 
     <div class="logo-container" id="logo-warp-container">
-    <canvas id="logo-canvas"></canvas>
+        <canvas id="logo-canvas"></canvas>
     </div>
 
     <canvas id="animation-canvas"></canvas>
 
-    <div class="card">
+
+    <div class="card captive-portal-container">
+
+        <div class="squirrel-interactive-wrapper">
+            <img src="/assets/logo/squirrel_white_eyes.png"  class="squirrel-body">
+            
+            <div class="reflection reflection-left"></div>
+            <div class="reflection reflection-right"></div>
+
+            <div class="squirrel-eyes-container">
+                <div class="eye-socket left">
+                    <div class="pupil"></div>
+                </div>
+                <div class="eye-socket right">
+                    <div class="pupil"></div>
+                </div>
+            </div>
+        </div>
+
+
+
         <h1>Résidence Wi-Fi</h1>
-        <p>Bienvenue à la Résidence de Chaudeborde.<br>
-        Veuillez saisir votre adresse e-mail pour activer votre accès internet.</p>
+
+        <p class="typewriter title-line">Bienvenue à la Résidence de Chaudeborde.</p>
+        <p class="typewriter subtitle-line-1">Veuillez saisir votre adresse e-mail</p>
+        <p class="typewriter subtitle-line-2">pour activer votre accès internet.</p>
+
         
         <form method="POST">
             <input type="text" name="vorname" placeholder="Votre prénom (Vorname)" required>
@@ -647,7 +1134,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     <li style="margin-top: 10px;">
                         <strong>Données :</strong> Nous collectons votre adresse e-mail pour des raisons de sécurité légale, conformément à la législation française sur la conservation des données de connexion.
                     </li>
-                </ol> 
+                </ol>
+                <p style="margin-top: 15px; border-top: 1px dashed #ccc; pt-2; font-style: italic;">
+                    Note : Pour faciliter vos prochaines connexions, vos identifiants sont enregistrés localement 
+                    dans votre navigateur. Aucune donnée personnelle n'est transmise à des tiers.
+                </p>
+
                </div>
                 <button type="button" class="btn-close-modal" data-target="agb_modal">Fermer</button>
             </div>
@@ -709,6 +1201,3 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
-
-
-
